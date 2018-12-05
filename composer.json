@@ -1,0 +1,12 @@
+{
+    "name": "sdrobov/autopsr4",
+    "description": "Small utility to convert legacy project to PSR-4",
+    "license": "project",
+    "authors": [
+        {
+            "name": "Sergey Drobov",
+            "email": "serch.m@gmail.com"
+        }
+    ],
+    "require": {}
+}
