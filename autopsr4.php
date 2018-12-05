@@ -8,7 +8,8 @@ if ($argc != 3) {
 $srcRoot = realpath($argv[1]);
 $rootNs = $argv[2];
 
-function usage() {
+function usage()
+{
     global $argv;
 
     echo "{$argv[0]} <src root> <root namespace>";
@@ -107,9 +108,11 @@ foreach ($fileReplaceMap as $file => &$replaces) {
     $replaces['usages'] = [];
     $replaces['uses'] = [];
     foreach ($classReplaceMap as $old => $new) {
-        if ($new == $replaces['fqn']) {
-            $parts = explode('\\', $new);
-            $shortName = array_pop($parts);
+        $parts = explode('\\', $new);
+        $shortName = array_pop($parts);
+        $ns = implode('\\', $parts);
+
+        if ($new == $replaces['fqn'] || $ns == $replaces['ns']) {
             $replaces['usages'][$old] = $shortName;
 
             continue;
@@ -117,20 +120,24 @@ foreach ($fileReplaceMap as $file => &$replaces) {
 
         $match = [];
         if (
-            preg_match_all(
-                "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\w){$old}(?!\w)/",
-                $content,
-                $match
-            )
+        preg_match_all(
+            "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\w){$old}(?!\w)/",
+            $content,
+            $match
+        )
         ) {
-            if (count($match[0]) > 2) {
-                $replaces['uses'][] = $new;
-                $parts = explode('\\', $new);
-                $shortName = array_pop($parts);
-                $replaces['usages'][$old] = $shortName;
-            } else {
-                $replaces['usages'][$old] = $new;
+            if (in_array($shortName, $replaces['usages']) && !array_key_exists($old, $replaces['usages'])) {
+                if (count($parts) > 1) {
+                    $shortName = end($parts) . $shortName;
+                } else {
+                    $shortName .= '1';
+                }
+
+                $new .= " as {$shortName}";
             }
+
+            $replaces['uses'][] = $new;
+            $replaces['usages'][$old] = $shortName;
         }
     }
 
@@ -144,8 +151,8 @@ foreach ($fileReplaceMap as $file => $replaces) {
     $content = file_get_contents($file);
 
     $content = preg_replace(
-        '/\<\?(php)?(\n\/\*[^\/]+\*\/)?/ms',
-        "<?php$2\n\nnamespace {$replaces['ns']};\n",
+        '/\<\?(php)?\n(\n?\/\*(?:[^\/]|\n)+\*\/\n)?/ms',
+        "<?php\n$2\n\nnamespace {$replaces['ns']};\n\n",
         $content
     );
     $content = preg_replace(
@@ -157,21 +164,25 @@ foreach ($fileReplaceMap as $file => $replaces) {
 
     if (!empty($replaces['uses'])) {
         $uses = implode(
-            ";\n",
+            "\n",
             array_map(
                 function ($use) {
-                    return "use {$use}";
+                    return "use {$use};";
                 },
                 $replaces['uses']
             )
         );
 
-        $content = preg_replace('/^(abstract )?(class|interface)/m', "{$uses};\n\n$1$2", $content);
+        $content = preg_replace(
+            '/^^(\/\*(?:[^\/]|\n)+\*\/\n)?(abstract )?(class|interface)/m',
+            "{$uses}\n\n$1$2$3",
+            $content
+        );
     }
 
     foreach ($replaces['usages'] as $old => $new) {
         $content = preg_replace(
-            "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\\\\)(?<!\w){$old}(?!\w)/",
+            "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\\\\)(?<!\w)(?<!')(?<!\"){$old}(?!\w)/",
             $new,
             $content
         );
