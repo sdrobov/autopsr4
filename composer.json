@@ -8,5 +8,10 @@
             "email": "serch.m@gmail.com"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "AutoPsr4\\": "src"
+        }
+    },
     "require": {}
 }

@@ -51,6 +51,7 @@ class File
     public function setName($name)
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -69,6 +70,7 @@ class File
     public function setPath($path)
     {
         $this->path = $path;
+
         return $this;
     }
 
@@ -87,6 +89,7 @@ class File
     public function setClass($class)
     {
         $this->class = $class;
+
         return $this;
     }
 
@@ -105,6 +108,35 @@ class File
     public function setUsages($usages)
     {
         $this->usages = $usages;
+
+        return $this;
+    }
+
+    /**
+     * @param ClassEntity $usage
+     * @return File
+     */
+    public function addUsage(ClassEntity $usage)
+    {
+        foreach ($this->usages as $item) {
+            if ($item->isEq($usage)) {
+                return $this;
+            }
+
+            if ($item->getShortClassName() == $usage->getShortClassName()) {
+                $usedAliases = array_map(function ($item) {
+                    /** @var ClassEntity $item */
+                    return $item->getAlias() ?: null;
+                }, $this->usages);
+
+                array_filter($usedAliases);
+
+                $usage->generateAlias($usedAliases);
+            }
+        }
+
+        $this->usages[] = $usage;
+
         return $this;
     }
 
@@ -130,7 +162,7 @@ class File
         }
 
         $match = [];
-        if (!preg_match('/^(?:abstract )?(?:class|interface) (\w+)/m', $content, $match)) {
+        if (!preg_match('/^(?:abstract )?(?:class|interface|trait) (\w+)/m', $content, $match)) {
             return false;
         }
 
@@ -143,10 +175,29 @@ class File
         }
 
         $this->class = (new ClassEntity())->setFqn("{$ns}\\{$realClassName}")
-                ->setOldClassName($oldClassName)
-                ->setShortClassName($realClassName)
-                ->setNs($ns);
+            ->setOldClassName($oldClassName)
+            ->setShortClassName($realClassName)
+            ->setNs($ns);
 
         return true;
+    }
+
+    /**
+     * @return string
+     */
+    public function getContent()
+    {
+        return file_get_contents($this->path) ?: '';
+    }
+
+    /**
+     * @param string $content
+     * @return File
+     */
+    public function setContent($content)
+    {
+        file_put_contents($this->path, $content);
+
+        return $this;
     }
 }

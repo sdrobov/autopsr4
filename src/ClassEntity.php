@@ -26,6 +26,11 @@ class ClassEntity
     protected $oldClassName;
 
     /**
+     * @var string
+     */
+    protected $alias;
+
+    /**
      * @return string
      */
     public function getFqn()
@@ -40,6 +45,7 @@ class ClassEntity
     public function setFqn($fqn)
     {
         $this->fqn = $fqn;
+
         return $this;
     }
 
@@ -58,6 +64,7 @@ class ClassEntity
     public function setNs($ns)
     {
         $this->ns = $ns;
+
         return $this;
     }
 
@@ -76,6 +83,7 @@ class ClassEntity
     public function setShortClassName($shortClassName)
     {
         $this->shortClassName = $shortClassName;
+
         return $this;
     }
 
@@ -94,6 +102,26 @@ class ClassEntity
     public function setOldClassName($oldClassName)
     {
         $this->oldClassName = $oldClassName;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAlias()
+    {
+        return $this->alias;
+    }
+
+    /**
+     * @param string $alias
+     * @return ClassEntity
+     */
+    public function setAlias($alias)
+    {
+        $this->alias = $alias;
+
         return $this;
     }
 
@@ -113,5 +141,29 @@ class ClassEntity
     public function isNsEq(ClassEntity $classEntity)
     {
         return $this->ns == $classEntity->getNs();
+    }
+
+    /**
+     * @param string[] $usedAliases
+     * @return ClassEntity
+     */
+    public function generateAlias(array $usedAliases = [])
+    {
+        $parts = explode('\\', $this->ns);
+
+        if (count($parts) > 1) {
+            $lastNs = end($parts);
+            $alias = "{$lastNs}{$this->shortClassName}";
+        } else {
+             $alias = "{$this->shortClassName}1";
+        }
+
+        if (!empty($usedAliases)) {
+            while (in_array($alias, $usedAliases)) {
+                $alias = $this->shortClassName . mt_rand(100, 999);
+            }
+        }
+
+        return $this->setAlias($alias);
     }
 }

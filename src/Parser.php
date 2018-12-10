@@ -75,7 +75,7 @@ class Parser
 
                 if ($file->parse($this->rootNs)) {
                     $this->files[] = $file;
-                    $this->classes[] = $file->getClass();
+                    $this->classes[] = clone $file->getClass();
                 }
             }
         }
