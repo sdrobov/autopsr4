@@ -1,2 +1,4 @@
 /vendor/
 .idea
+/phar/
+autopsr4.phar
