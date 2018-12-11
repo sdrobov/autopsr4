@@ -5,12 +5,12 @@ namespace AutoPsr4;
 
 class App
 {
-    public static function run()
+    public function run($argv)
     {
         $options = getopt('n:d:h');
 
         if (!isset($options['n']) || !isset($options['d']) || isset($options['h'])) {
-            static::usage();
+            $this->usage($argv);
         }
 
         $parser = new Parser($options['d'], $options['n']);
@@ -23,9 +23,8 @@ class App
         $replacer->replace();
     }
 
-    public static function usage()
+    public function usage($argv)
     {
-        global $argv;
         echo <<<USAGE
 Usage: {$argv[0]} <-n root namespace> <-d src dir>
 Or: {$argv[0]} -h for this message

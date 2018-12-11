@@ -3,5 +3,5 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-\AutoPsr4\App::run();
+(new \AutoPsr4\App())->run($argv);
 

@@ -166,4 +166,44 @@ class ClassEntity
 
         return $this->setAlias($alias);
     }
+
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function addNamespace($content)
+    {
+        return preg_replace(
+            '/\<\?(php)?\n(\n?\/\*(?:[^\/]|\n)+\*\/\n)?/ms',
+            "<?php\n$2\n\nnamespace {$this->ns};\n\n",
+            $content
+        );
+    }
+
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function renameClassname($content)
+    {
+        return preg_replace(
+            '/^(abstract )?(class|interface) \w+/m',
+            "$1$2 {$this->shortClassName}",
+            $content,
+            1
+        );
+    }
+
+    /**
+     * @param string $content
+     * @return string
+     */
+    public function renameUsage($content)
+    {
+        return preg_replace(
+            "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\\\\)(?<!\w)(?<!')(?<!\"){$this->oldClassName}(?!\w)/",
+            $this->alias ?: $this->shortClassName,
+            $content
+        );
+    }
 }

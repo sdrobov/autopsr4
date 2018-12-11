@@ -26,13 +26,18 @@ class File
     protected $usages = [];
 
     /**
+     * @var string
+     */
+    protected $content;
+
+    /**
      * File constructor.
      * @param string $path
      */
     public function __construct($path)
     {
         $this->path = $path;
-        $parts = explode(PATH_SEPARATOR, $path);
+        $parts = explode(DIRECTORY_SEPARATOR, $path);
         $this->name = end($parts);
     }
 
@@ -75,25 +80,6 @@ class File
     }
 
     /**
-     * @return ClassEntity
-     */
-    public function getClass()
-    {
-        return $this->class;
-    }
-
-    /**
-     * @param ClassEntity $class
-     * @return File
-     */
-    public function setClass($class)
-    {
-        $this->class = $class;
-
-        return $this;
-    }
-
-    /**
      * @return ClassEntity[]
      */
     public function getUsages()
@@ -118,24 +104,52 @@ class File
      */
     public function addUsage(ClassEntity $usage)
     {
-        foreach ($this->usages as $item) {
-            if ($item->isEq($usage)) {
+        $allClasses = $this->usages ?: [];
+        $allClasses[] = $this->getClass();
+        foreach ($allClasses as $class) {
+            if ($class->isEq($usage)) {
                 return $this;
             }
+        }
 
-            if ($item->getShortClassName() == $usage->getShortClassName()) {
-                $usedAliases = array_map(function ($item) {
-                    /** @var ClassEntity $item */
-                    return $item->getAlias() ?: null;
-                }, $this->usages);
+        foreach ($allClasses as $class) {
+            if ($class->getShortClassName() == $usage->getShortClassName()) {
+                $usedAliases = array_map(
+                    function ($item) {
+                        /** @var ClassEntity $item */
+                        return $item->getAlias() ?: null;
+                    },
+                    $this->usages
+                );
 
                 array_filter($usedAliases);
 
                 $usage->generateAlias($usedAliases);
+
+                break;
             }
         }
 
         $this->usages[] = $usage;
+
+        return $this;
+    }
+
+    /**
+     * @return ClassEntity
+     */
+    public function getClass()
+    {
+        return $this->class;
+    }
+
+    /**
+     * @param ClassEntity $class
+     * @return File
+     */
+    public function setClass($class)
+    {
+        $this->class = $class;
 
         return $this;
     }
@@ -146,7 +160,7 @@ class File
      */
     public function parse($rootNs)
     {
-        $parts = explode('/', $this->path);
+        $parts = explode(DIRECTORY_SEPARATOR, $this->path);
         array_shift($parts);
 
         $possibleClassName = array_pop($parts);
@@ -154,15 +168,13 @@ class File
 
         $ns = $rootNs . (empty($parts) ? '' : '\\' . implode("\\", $parts));
 
-        $content = file_get_contents($this->path);
-
         $match = [];
-        if (preg_match('/^namespace ([^;]+);$/m', $content, $match)) {
+        if (preg_match('/^namespace ([^;]+);$/m', $this->getContent(), $match)) {
             return false;
         }
 
         $match = [];
-        if (!preg_match('/^(?:abstract )?(?:class|interface|trait) (\w+)/m', $content, $match)) {
+        if (!preg_match('/^(?:abstract )?(?:class|interface|trait) (\w+)/m', $this->getContent(), $match)) {
             return false;
         }
 
@@ -187,7 +199,11 @@ class File
      */
     public function getContent()
     {
-        return file_get_contents($this->path) ?: '';
+        if (!$this->content) {
+            $this->content = file_get_contents($this->path);
+        }
+
+        return $this->content;
     }
 
     /**
@@ -196,7 +212,22 @@ class File
      */
     public function setContent($content)
     {
-        file_put_contents($this->path, $content);
+        $this->content = $content;
+
+        return $this;
+    }
+
+    /**
+     * @param string $path
+     * @return File
+     */
+    public function flush($path = null)
+    {
+        if (!$path) {
+            $path = $this->path;
+        }
+
+        file_put_contents($path, $this->content);
 
         return $this;
     }

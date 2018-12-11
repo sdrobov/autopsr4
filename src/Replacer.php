@@ -38,23 +38,17 @@ class Replacer
         return $this;
     }
 
-    public function replace()
+    /**
+     * @param bool $dryRun
+     */
+    public function replace($dryRun = false)
     {
         foreach ($this->files as $file) {
             $content = $file->getContent();
             $class = $file->getClass();
 
-            $content = preg_replace(
-                '/\<\?(php)?\n(\n?\/\*(?:[^\/]|\n)+\*\/\n)?/ms',
-                "<?php\n$2\n\nnamespace {$class->getNs()};\n\n",
-                $content
-            );
-            $content = preg_replace(
-                '/^(abstract )?(class|interface) \w+/m',
-                "$1$2 {$class->getShortClassName()}",
-                $content,
-                1
-            );
+            $content = $class->addNamespace($content);
+            $content = $class->renameClassname($content);
 
             $uses = [];
             foreach ($file->getUsages() as $usage) {
@@ -62,11 +56,7 @@ class Replacer
                     $uses[] = $usage;
                 }
 
-                $content = preg_replace(
-                    "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\\\\)(?<!\w)(?<!')(?<!\"){$usage->getOldClassName()}(?!\w)/",
-                    $usage->getAlias() ?: $usage->getShortClassName(),
-                    $content
-                );
+                $content = $usage->renameUsage($content);
             }
 
             if (!empty($uses)) {
@@ -89,6 +79,10 @@ class Replacer
             }
 
             $file->setContent($content);
+
+            if (!$dryRun) {
+                $file->flush();
+            }
         }
     }
 }

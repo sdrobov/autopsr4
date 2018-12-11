@@ -74,12 +74,10 @@ class UsageFinder
                     continue;
                 }
 
-                $match = [];
                 if (
-                preg_match_all(
+                preg_match(
                     "/(?<!class )(?<!trait )(?<!interface )(?<!namespace )(?<!\$)(?<!\w){$class->getOldClassName()}(?!\w)/",
-                    $file->getContent(),
-                    $match
+                    $file->getContent()
                 )
                 ) {
                     $file->addUsage($class);
