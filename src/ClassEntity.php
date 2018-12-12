@@ -196,14 +196,23 @@ class ClassEntity
 
     /**
      * @param string $content
+     * @param bool $useAlias
      * @return string
      */
-    public function renameUsage($content)
+    public function renameUsage($content, $useAlias = true)
     {
         return preg_replace(
             "/(?<!class )(?<!interface )(?<!namespace )(?<!\$)(?<!\\\\)(?<!\w)(?<!')(?<!\"){$this->oldClassName}(?!\w)/",
-            $this->alias ?: $this->shortClassName,
+            $useAlias ? $this->getShortNameOrAlias() : $this->shortClassName,
             $content
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getShortNameOrAlias()
+    {
+        return $this->alias ?: $this->shortClassName;
     }
 }

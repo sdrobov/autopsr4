@@ -104,8 +104,10 @@ class File
      */
     public function addUsage(ClassEntity $usage)
     {
+        /** @var ClassEntity[] $allClasses */
         $allClasses = $this->usages ?: [];
         $allClasses[] = $this->getClass();
+
         foreach ($allClasses as $class) {
             if ($class->isEq($usage)) {
                 return $this;
@@ -113,10 +115,9 @@ class File
         }
 
         foreach ($allClasses as $class) {
-            if ($class->getShortClassName() == $usage->getShortClassName()) {
+            if ($class->getShortNameOrAlias() == $usage->getShortClassName()) {
                 $usedAliases = array_map(
-                    function ($item) {
-                        /** @var ClassEntity $item */
+                    function (ClassEntity $item) {
                         return $item->getAlias() ?: null;
                     },
                     $this->usages

@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 
 ini_set('phar.readonly', 0);

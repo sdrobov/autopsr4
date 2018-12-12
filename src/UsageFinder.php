@@ -69,8 +69,6 @@ class UsageFinder
         foreach ($this->files as &$file) {
             foreach ($this->classes as $class) {
                 if ($file->getClass()->isEq($class)) {
-                    $file->addUsage($class);
-
                     continue;
                 }
 
@@ -80,7 +78,7 @@ class UsageFinder
                     $file->getContent()
                 )
                 ) {
-                    $file->addUsage($class);
+                    $file->addUsage(clone $class);
                 }
             }
         }

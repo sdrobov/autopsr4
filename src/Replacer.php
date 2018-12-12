@@ -49,6 +49,7 @@ class Replacer
 
             $content = $class->addNamespace($content);
             $content = $class->renameClassname($content);
+            $content = $class->renameUsage($content, false);
 
             $uses = [];
             foreach ($file->getUsages() as $usage) {
