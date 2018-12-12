@@ -1,0 +1,22 @@
+language: php
+php:
+  - '7.2'
+
+before_script:
+  - composer install
+
+jobs:
+  include:
+    - stage: test
+      script: phpunit
+    - stage: build
+      script: php create-phar.php
+
+deploy:
+  provider: releases
+  api_key:
+    secure: pO7Gxu/icU/KdyrB2kP53qWEk7/n3d//MmWDvveZliVxM5c82JRY2rRsjWlx+a6BPDCs6LBvX3wMuTZrXxCCIJLLrckfUrQhyx4r/qOuXA4dv59GZdXsEFnsuVt1AHoL7vRYa36t65AHaEuy2wSLS+A/iFwECTSQ8F1IQ3ZGwQQGR2xkMk5xzRcZIhJ/CJx37mYgEvQ16FI+lcKxpMGf2aHO1g403QAgA9azUjwc0zLJzt11oK/imD/xKdSMh7IBKnr8R2UdV/B5HCkr0IsV8ESrXJwL4FdTtKOt9ouEam9AY27Eq3+ahpQIjbo0pej7tbm9Hfvk/M/Jz1wbcWOcbjtmslYRWdfbD1OVtKjgcfJqOhjCcshmQp6QAR5wRfS8633Oq9lvt/EExEM5+0YZsaKgFPcBO3HYO79HI8FvWVDRVXSqGxQkidNkqY0RTNECqCBrmzBZptA6YwPldGq4eNfa1u9Gd2obIjQj1rNC/6hGhfr74EAvUPmKOclWAIyUKByM1LTMvemTGXjWteWSlQ4s+i7TDzNh5fiMC+AHfRw4UTYtAGShq6Rfpx7MywwtjsrXQOG+k06mmSup8AZM9/cLuCUSBLY/e2cnB6avInRyFb20RJsPnQY74kk5JlfpDmvVadeFp0dY61L+lCZ7Sie0Sb60n0lQPZNnl9e/dcY=
+  file: autopsr4.phar
+  skip_cleanup: true
+  on:
+    tags: true
