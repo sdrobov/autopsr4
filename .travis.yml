@@ -10,7 +10,7 @@ jobs:
     - stage: test
       script: phpunit
     - stage: build
-      script: ./create-phar.php
+      script: php create-phar.php
 
 deploy:
   provider: releases
